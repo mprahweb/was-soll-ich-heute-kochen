@@ -4,19 +4,466 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Was soll ich heute kochen?</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary: #2d6a4f;
+  --primary-light: #40916c;
+  --primary-dark: #1b4332;
+  --accent: #d4a373;
+  --accent-light: #e9c46a;
+  --bg: #fefae0;
+  --bg-card: #ffffff;
+  --text: #2b2d42;
+  --text-light: #555;
+  --border: #ddd;
+  --shadow: 0 2px 8px rgba(0,0,0,0.1);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+body {
+  font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+}
+
+.header {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: white;
+  text-align: center;
+  padding: 2rem 1rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.header h1 {
+  font-size: 1.6rem;
+  margin-bottom: 0.3rem;
+  letter-spacing: -0.5px;
+}
+
+.header p {
+  opacity: 0.85;
+  font-size: 0.95rem;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.section {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.section-title {
+  font-size: 1.15rem;
+  color: var(--primary-dark);
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-title .icon {
+  font-size: 1.3rem;
+}
+
+.category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+
+.category-tab {
+  padding: 0.45rem 0.8rem;
+  border: 2px solid var(--border);
+  border-radius: 25px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: all 0.2s;
+  font-weight: 500;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.category-tab:hover {
+  border-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.category-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.ingredient-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.ingredient-item {
+  padding: 0.55rem 0.5rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  font-size: 0.85rem;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ingredient-item:hover {
+  border-color: var(--primary-light);
+  background: #f0faf4;
+}
+
+.ingredient-item.selected {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  font-weight: 500;
+}
+
+.selected-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  align-items: center;
+}
+
+.selected-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.7rem;
+  background: var(--accent);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.selected-tag .remove {
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.1rem;
+  line-height: 1;
+  opacity: 0.8;
+  padding-left: 0.2rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.selected-empty {
+  color: var(--text-light);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.generate-btn {
+  display: block;
+  width: 100%;
+  padding: 0.9rem;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: var(--shadow);
+  -webkit-tap-highlight-color: transparent;
+  margin-bottom: 1rem;
+}
+
+.generate-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.generate-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.generate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.meal-plan {
+  display: grid;
+  gap: 1rem;
+}
+
+.day-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: fadeIn 0.4s ease-out both;
+}
+
+.day-card:nth-child(2) { animation-delay: 0.1s; }
+.day-card:nth-child(3) { animation-delay: 0.2s; }
+.day-card:nth-child(4) { animation-delay: 0.3s; }
+.day-card:nth-child(5) { animation-delay: 0.4s; }
+
+.day-header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  padding: 0.7rem 1rem;
+  font-weight: 600;
+  font-size: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.day-header .difficulty {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
+  font-weight: 400;
+}
+
+.day-body {
+  padding: 1rem;
+}
+
+.recipe-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--primary-dark);
+  margin-bottom: 0.3rem;
+}
+
+.recipe-description {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  margin-bottom: 0.8rem;
+}
+
+.match-score {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.7rem;
+}
+
+.match-bar-bg {
+  flex: 1;
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.match-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s;
+}
+
+.match-bar-fill.high { background: var(--primary); }
+.match-bar-fill.medium { background: var(--accent); }
+.match-bar-fill.low { background: #e74c3c; }
+
+.match-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-width: 2.5rem;
+}
+
+.match-info {
+  font-size: 0.75rem;
+  color: #888;
+  white-space: nowrap;
+}
+
+.recipe-section-label {
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.3rem;
+  color: var(--text);
+}
+
+.ingredient-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.8rem;
+}
+
+.ingredient-chip {
+  padding: 0.2rem 0.5rem;
+  border-radius: 15px;
+  font-size: 0.78rem;
+}
+
+.ingredient-chip.available {
+  background: var(--primary);
+  color: white;
+}
+
+.ingredient-chip.missing {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.spice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.spice-chip {
+  padding: 0.2rem 0.5rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  color: #5a3e1b;
+  border-radius: 15px;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.shopping-section {
+  margin-top: 1rem;
+}
+
+.shopping-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.shopping-column h4 {
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+  color: var(--primary-dark);
+}
+
+.shopping-column ul {
+  list-style: none;
+  padding: 0;
+}
+
+.shopping-column li {
+  padding: 0.25rem 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.shopping-column li::before {
+  content: "\2022";
+  margin-right: 0.5rem;
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.no-results {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-light);
+}
+
+.no-results .big-icon {
+  font-size: 3rem;
+  margin-bottom: 0.8rem;
+}
+
+.no-results p {
+  font-size: 1rem;
+}
+
+.counter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  margin-left: 0.3rem;
+}
+
+.clear-btn {
+  padding: 0.35rem 0.7rem;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text-light);
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.clear-btn:hover {
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+.footer {
+  text-align: center;
+  padding: 1.2rem;
+  color: var(--text-light);
+  font-size: 0.8rem;
+}
+
+@media (min-width: 768px) {
+  .header h1 { font-size: 2rem; }
+  .header p { font-size: 1.05rem; }
+  .container { padding: 1.5rem; }
+  .section { padding: 1.5rem; }
+  .ingredient-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}
+
+@media (max-width: 400px) {
+  .shopping-columns { grid-template-columns: 1fr; }
+  .category-tab { padding: 0.35rem 0.6rem; font-size: 0.78rem; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+  </style>
 </head>
 <body>
   <header class="header">
     <h1>Was soll ich heute kochen?</h1>
-    <p>Wähle deine Lebensmittel aus und erhalte Rezeptvorschläge für 5 Tage</p>
+    <p>Wähle deine Lebensmittel und erhalte Rezeptvorschläge für 5 Tage</p>
   </header>
 
   <main class="container">
-    <!-- Ingredient Selection -->
     <div class="section">
       <h2 class="section-title">
-        <span class="icon">🥗</span>
+        <span class="icon">&#x1F957;</span>
         Lebensmittel auswählen
         <span class="counter" id="selectedCount" style="display:none">0</span>
       </h2>
@@ -24,11 +471,10 @@
       <div class="ingredient-grid" id="ingredientGrid"></div>
     </div>
 
-    <!-- Selected Ingredients -->
     <div class="section">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem">
         <h2 class="section-title" style="margin-bottom:0">
-          <span class="icon">✅</span>
+          <span class="icon">&#x2705;</span>
           Ausgewählte Lebensmittel
         </h2>
         <button class="clear-btn" id="clearBtn">Alle entfernen</button>
@@ -36,16 +482,14 @@
       <div class="selected-bar" id="selectedBar"></div>
     </div>
 
-    <!-- Generate Button -->
     <button class="generate-btn" id="generateBtn" disabled>
       Rezeptvorschläge für 5 Tage generieren
     </button>
 
-    <!-- Results -->
-    <div id="resultsSection" style="display:none; margin-top:1.5rem">
+    <div id="resultsSection" style="display:none">
       <div class="section">
         <h2 class="section-title">
-          <span class="icon">📅</span>
+          <span class="icon">&#x1F4C5;</span>
           Dein 5-Tage Essensplan
         </h2>
         <div id="mealPlan"></div>
@@ -57,7 +501,573 @@
     Was soll ich heute kochen? &mdash; Dein Rezeptplaner
   </footer>
 
-  <script src="data.js"></script>
-  <script src="app.js"></script>
+  <script>
+// === DATENBANK ===
+var INGREDIENTS = {
+  "Gemüse": [
+    "Kartoffeln", "Tomaten", "Zwiebeln", "Paprika", "Zucchini",
+    "Brokkoli", "Karotten", "Spinat", "Champignons", "Aubergine",
+    "Blumenkohl", "Lauch", "Knoblauch", "Gurke", "Erbsen",
+    "Bohnen", "Kürbis", "Süßkartoffeln", "Sellerie", "Mais"
+  ],
+  "Obst": [
+    "Äpfel", "Bananen", "Zitronen", "Orangen", "Beeren",
+    "Avocado", "Mango", "Birnen", "Ananas", "Trauben"
+  ],
+  "Fleisch & Fisch": [
+    "Hähnchenbrust", "Hackfleisch", "Rindfleisch", "Schweinefilet",
+    "Lachs", "Thunfisch", "Garnelen", "Putenbrust", "Würstchen", "Speck"
+  ],
+  "Milchprodukte": [
+    "Milch", "Butter", "Sahne", "Käse", "Joghurt",
+    "Frischkäse", "Mozzarella", "Parmesan", "Schmand", "Quark"
+  ],
+  "Getreide & Beilagen": [
+    "Nudeln", "Reis", "Brot", "Mehl", "Haferflocken",
+    "Couscous", "Kartoffelpüree", "Tortillas", "Bulgur", "Linsen"
+  ],
+  "Sonstiges": [
+    "Eier", "Tofu", "Kokosmilch", "Sojasauce", "Olivenöl",
+    "Passierte Tomaten", "Senf", "Honig", "Nüsse", "Brühe"
+  ]
+};
+
+var RECIPES = [
+  {
+    name: "Spaghetti Bolognese",
+    ingredients: ["Nudeln", "Hackfleisch", "Tomaten", "Zwiebeln", "Knoblauch", "Passierte Tomaten"],
+    spices: ["Oregano", "Basilikum", "Salz", "Pfeffer", "Paprikapulver"],
+    description: "Klassische Spaghetti mit reichhaltiger Hackfleisch-Tomatensauce.",
+    servings: 4,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Gemüsecurry mit Reis",
+    ingredients: ["Reis", "Paprika", "Zucchini", "Kokosmilch", "Zwiebeln", "Knoblauch"],
+    spices: ["Currypulver", "Kurkuma", "Kreuzkümmel", "Ingwer", "Chili", "Salz"],
+    description: "Cremiges Gemüsecurry mit Kokosmilch, serviert auf duftendem Reis.",
+    servings: 4,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Hähnchen-Gemüse-Pfanne",
+    ingredients: ["Hähnchenbrust", "Paprika", "Zucchini", "Champignons", "Zwiebeln", "Reis"],
+    spices: ["Paprikapulver", "Knoblauchpulver", "Salz", "Pfeffer", "Thymian"],
+    description: "Bunte Pfanne mit zartem Hähnchen und frischem Gemüse.",
+    servings: 3,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Kartoffelgratin",
+    ingredients: ["Kartoffeln", "Sahne", "Käse", "Butter", "Knoblauch"],
+    spices: ["Muskatnuss", "Salz", "Pfeffer", "Thymian"],
+    description: "Goldbraun überbackene Kartoffelscheiben in cremiger Sahnesauce.",
+    servings: 4,
+    difficulty: "Mittel"
+  },
+  {
+    name: "Lachs mit Brokkoli",
+    ingredients: ["Lachs", "Brokkoli", "Zitronen", "Butter", "Reis"],
+    spices: ["Dill", "Salz", "Pfeffer", "Zitronenpfeffer"],
+    description: "Gebratener Lachs mit gedämpftem Brokkoli und Zitronenbutter.",
+    servings: 2,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Spinat-Ricotta-Nudeln",
+    ingredients: ["Nudeln", "Spinat", "Frischkäse", "Knoblauch", "Parmesan"],
+    spices: ["Muskatnuss", "Salz", "Pfeffer", "Chiliflocken"],
+    description: "Cremige Nudeln mit frischem Spinat und Frischkäse-Sauce.",
+    servings: 3,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Chili con Carne",
+    ingredients: ["Hackfleisch", "Bohnen", "Tomaten", "Mais", "Zwiebeln", "Paprika", "Knoblauch"],
+    spices: ["Kreuzkümmel", "Chili", "Paprikapulver", "Oregano", "Salz", "Pfeffer"],
+    description: "Würziges Chili mit Hackfleisch, Bohnen und Mais.",
+    servings: 5,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Kürbissuppe",
+    ingredients: ["Kürbis", "Zwiebeln", "Kartoffeln", "Sahne", "Knoblauch", "Brühe"],
+    spices: ["Muskatnuss", "Ingwer", "Salz", "Pfeffer", "Kürbiskernöl"],
+    description: "Samtige Kürbissuppe mit einem Hauch von Muskatnuss.",
+    servings: 4,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Putenbrust mit Süßkartoffeln",
+    ingredients: ["Putenbrust", "Süßkartoffeln", "Spinat", "Olivenöl", "Knoblauch"],
+    spices: ["Rosmarin", "Thymian", "Salz", "Pfeffer", "Paprikapulver"],
+    description: "Saftige Putenbrust mit gebackenen Süßkartoffeln und Spinat.",
+    servings: 2,
+    difficulty: "Mittel"
+  },
+  {
+    name: "Tomaten-Mozzarella-Salat",
+    ingredients: ["Tomaten", "Mozzarella", "Olivenöl", "Avocado"],
+    spices: ["Basilikum", "Salz", "Pfeffer", "Balsamico"],
+    description: "Frischer Caprese-Salat mit cremiger Avocado.",
+    servings: 2,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Kartoffelpuffer",
+    ingredients: ["Kartoffeln", "Eier", "Mehl", "Zwiebeln"],
+    spices: ["Salz", "Pfeffer", "Muskatnuss"],
+    description: "Knusprige Kartoffelpuffer, serviert mit Apfelmus oder Schmand.",
+    servings: 3,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Garnelen-Pasta",
+    ingredients: ["Nudeln", "Garnelen", "Knoblauch", "Tomaten", "Sahne", "Olivenöl"],
+    spices: ["Chiliflocken", "Petersilie", "Salz", "Pfeffer", "Zitrone"],
+    description: "Elegante Pasta mit saftigen Garnelen in Knoblauch-Sahne-Sauce.",
+    servings: 2,
+    difficulty: "Mittel"
+  },
+  {
+    name: "Blumenkohl-Auflauf",
+    ingredients: ["Blumenkohl", "Käse", "Sahne", "Eier", "Butter"],
+    spices: ["Muskatnuss", "Salz", "Pfeffer", "Schnittlauch"],
+    description: "Cremig überbackener Blumenkohl mit goldener Käsekruste.",
+    servings: 4,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Tacos mit Hackfleisch",
+    ingredients: ["Tortillas", "Hackfleisch", "Tomaten", "Käse", "Zwiebeln", "Avocado"],
+    spices: ["Kreuzkümmel", "Chili", "Paprikapulver", "Koriander", "Salz", "Limette"],
+    description: "Knackige Tacos gefüllt mit würzigem Hackfleisch und frischen Toppings.",
+    servings: 4,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Linsensuppe",
+    ingredients: ["Linsen", "Karotten", "Zwiebeln", "Kartoffeln", "Knoblauch", "Brühe"],
+    spices: ["Kreuzkümmel", "Kurkuma", "Salz", "Pfeffer", "Lorbeerblatt"],
+    description: "Herzhafte Linsensuppe mit Gemüse \u2013 nahrhaft und wärmend.",
+    servings: 4,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Schweinefilet mit Champignons",
+    ingredients: ["Schweinefilet", "Champignons", "Sahne", "Zwiebeln", "Kartoffeln"],
+    spices: ["Thymian", "Rosmarin", "Salz", "Pfeffer", "Senf"],
+    description: "Zartes Schweinefilet in cremiger Champignon-Rahmsauce.",
+    servings: 3,
+    difficulty: "Mittel"
+  },
+  {
+    name: "Couscous-Salat",
+    ingredients: ["Couscous", "Paprika", "Gurke", "Tomaten", "Zitronen", "Olivenöl"],
+    spices: ["Minze", "Petersilie", "Kreuzkümmel", "Salz", "Pfeffer"],
+    description: "Leichter Couscous-Salat mit knackigem Gemüse und frischen Kräutern.",
+    servings: 3,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Auberginen-Lasagne",
+    ingredients: ["Aubergine", "Passierte Tomaten", "Mozzarella", "Parmesan", "Knoblauch", "Zwiebeln"],
+    spices: ["Oregano", "Basilikum", "Salz", "Pfeffer", "Thymian"],
+    description: "Vegetarische Lasagne mit Auberginen statt Nudelplatten.",
+    servings: 4,
+    difficulty: "Mittel"
+  },
+  {
+    name: "Thunfisch-Wraps",
+    ingredients: ["Tortillas", "Thunfisch", "Mais", "Paprika", "Joghurt", "Gurke"],
+    spices: ["Dill", "Salz", "Pfeffer", "Zitrone"],
+    description: "Schnelle Wraps gefüllt mit Thunfischsalat und knackigem Gemüse.",
+    servings: 2,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Ofengemüse mit Feta",
+    ingredients: ["Zucchini", "Paprika", "Süßkartoffeln", "Tomaten", "Olivenöl"],
+    spices: ["Rosmarin", "Thymian", "Oregano", "Salz", "Pfeffer", "Knoblauchpulver"],
+    description: "Bunt geröstetes Ofengemüse mit zerbröseltem Feta.",
+    servings: 3,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Eierpfannkuchen",
+    ingredients: ["Eier", "Mehl", "Milch", "Butter", "Äpfel"],
+    spices: ["Zimt", "Vanillezucker", "Salz", "Zucker"],
+    description: "Goldene Pfannkuchen mit karamellisierten Äpfeln.",
+    servings: 3,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Rindfleisch-Eintopf",
+    ingredients: ["Rindfleisch", "Kartoffeln", "Karotten", "Zwiebeln", "Sellerie", "Brühe"],
+    spices: ["Lorbeerblatt", "Thymian", "Rosmarin", "Salz", "Pfeffer", "Paprikapulver"],
+    description: "Deftiger Eintopf mit zartem Rindfleisch und Wurzelgemüse.",
+    servings: 5,
+    difficulty: "Mittel"
+  },
+  {
+    name: "Bananen-Haferflocken-Frühstück",
+    ingredients: ["Haferflocken", "Bananen", "Milch", "Honig", "Nüsse"],
+    spices: ["Zimt", "Vanillezucker"],
+    description: "Gesundes Frühstück mit cremigen Haferflocken und frischen Bananen.",
+    servings: 2,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Lauch-Kartoffel-Suppe",
+    ingredients: ["Lauch", "Kartoffeln", "Sahne", "Butter", "Brühe"],
+    spices: ["Muskatnuss", "Salz", "Pfeffer", "Schnittlauch"],
+    description: "Samtige Suppe aus Lauch und Kartoffeln mit einem Schuss Sahne.",
+    servings: 4,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Tofu-Gemüse-Wok",
+    ingredients: ["Tofu", "Paprika", "Karotten", "Champignons", "Sojasauce", "Reis"],
+    spices: ["Ingwer", "Knoblauchpulver", "Sesamöl", "Chiliflocken", "Salz"],
+    description: "Knuspriger Tofu mit buntem Wok-Gemüse in würziger Sauce.",
+    servings: 3,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Quark-Kartoffeln",
+    ingredients: ["Kartoffeln", "Quark", "Zwiebeln", "Gurke", "Olivenöl"],
+    spices: ["Schnittlauch", "Salz", "Pfeffer", "Kümmel"],
+    description: "Einfache Pellkartoffeln mit cremigem Kräuterquark.",
+    servings: 2,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Birnen-Käse-Salat",
+    ingredients: ["Birnen", "Käse", "Nüsse", "Spinat", "Honig"],
+    spices: ["Pfeffer", "Salz", "Balsamico"],
+    description: "Eleganter Salat mit süßen Birnen, würzigem Käse und Walnüssen.",
+    servings: 2,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Speck-Erbsen-Risotto",
+    ingredients: ["Reis", "Erbsen", "Speck", "Zwiebeln", "Parmesan", "Brühe"],
+    spices: ["Salz", "Pfeffer", "Muskatnuss", "Petersilie"],
+    description: "Cremiges Risotto mit knusprigem Speck und süßen Erbsen.",
+    servings: 3,
+    difficulty: "Mittel"
+  },
+  {
+    name: "Mango-Hähnchen-Bowl",
+    ingredients: ["Hähnchenbrust", "Mango", "Reis", "Avocado", "Karotten"],
+    spices: ["Sojasauce", "Sesamöl", "Ingwer", "Limette", "Chiliflocken"],
+    description: "Frische Bowl mit gegrilltem Hähnchen, Mango und Avocado.",
+    servings: 2,
+    difficulty: "Einfach"
+  },
+  {
+    name: "Bulgur-Salat",
+    ingredients: ["Bulgur", "Tomaten", "Gurke", "Zwiebeln", "Zitronen", "Olivenöl"],
+    spices: ["Petersilie", "Minze", "Sumach", "Salz", "Pfeffer"],
+    description: "Orientalischer Bulgur-Salat nach Kisir-Art mit frischen Kräutern.",
+    servings: 4,
+    difficulty: "Einfach"
+  }
+];
+
+// === APP ===
+var state = {
+  selectedIngredients: {},
+  activeCategory: "Gemüse",
+  mealPlan: []
+};
+
+function hasIngredient(name) {
+  return state.selectedIngredients[name] === true;
+}
+
+function countSelected() {
+  var count = 0;
+  for (var key in state.selectedIngredients) {
+    if (state.selectedIngredients[key]) count++;
+  }
+  return count;
+}
+
+function getSelectedList() {
+  var list = [];
+  for (var key in state.selectedIngredients) {
+    if (state.selectedIngredients[key]) list.push(key);
+  }
+  return list;
+}
+
+var categoryTabsEl = null;
+var ingredientGridEl = null;
+var selectedBarEl = null;
+var selectedCountEl = null;
+var generateBtn = null;
+var clearBtn = null;
+var mealPlanEl = null;
+var resultsSection = null;
+
+function init() {
+  categoryTabsEl = document.getElementById('categoryTabs');
+  ingredientGridEl = document.getElementById('ingredientGrid');
+  selectedBarEl = document.getElementById('selectedBar');
+  selectedCountEl = document.getElementById('selectedCount');
+  generateBtn = document.getElementById('generateBtn');
+  clearBtn = document.getElementById('clearBtn');
+  mealPlanEl = document.getElementById('mealPlan');
+  resultsSection = document.getElementById('resultsSection');
+
+  renderCategoryTabs();
+  renderIngredients();
+  updateSelectedBar();
+
+  generateBtn.addEventListener('click', generateMealPlan);
+  clearBtn.addEventListener('click', clearSelection);
+}
+
+function renderCategoryTabs() {
+  var keys = [];
+  for (var k in INGREDIENTS) keys.push(k);
+
+  var html = '';
+  for (var i = 0; i < keys.length; i++) {
+    var cat = keys[i];
+    var cls = cat === state.activeCategory ? 'category-tab active' : 'category-tab';
+    html += '<button class="' + cls + '" data-category="' + cat + '">' + cat + '</button>';
+  }
+  categoryTabsEl.innerHTML = html;
+
+  var tabs = categoryTabsEl.querySelectorAll('.category-tab');
+  for (var j = 0; j < tabs.length; j++) {
+    tabs[j].addEventListener('click', function() {
+      state.activeCategory = this.getAttribute('data-category');
+      renderCategoryTabs();
+      renderIngredients();
+    });
+  }
+}
+
+function renderIngredients() {
+  var items = INGREDIENTS[state.activeCategory];
+  var html = '';
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var cls = hasIngredient(item) ? 'ingredient-item selected' : 'ingredient-item';
+    html += '<div class="' + cls + '" data-name="' + item + '">' + item + '</div>';
+  }
+  ingredientGridEl.innerHTML = html;
+
+  var els = ingredientGridEl.querySelectorAll('.ingredient-item');
+  for (var j = 0; j < els.length; j++) {
+    els[j].addEventListener('click', function() {
+      toggleIngredient(this.getAttribute('data-name'));
+    });
+  }
+}
+
+function toggleIngredient(name) {
+  if (hasIngredient(name)) {
+    delete state.selectedIngredients[name];
+  } else {
+    state.selectedIngredients[name] = true;
+  }
+  renderIngredients();
+  updateSelectedBar();
+}
+
+function updateSelectedBar() {
+  var count = countSelected();
+  selectedCountEl.textContent = count;
+  selectedCountEl.style.display = count > 0 ? 'inline-flex' : 'none';
+  generateBtn.disabled = count === 0;
+
+  if (count === 0) {
+    selectedBarEl.innerHTML = '<span class="selected-empty">Noch keine Lebensmittel ausgewählt...</span>';
+    return;
+  }
+
+  var list = getSelectedList();
+  var html = '';
+  for (var i = 0; i < list.length; i++) {
+    html += '<span class="selected-tag">' + list[i] + '<span class="remove" data-name="' + list[i] + '">&times;</span></span>';
+  }
+  selectedBarEl.innerHTML = html;
+
+  var removeBtns = selectedBarEl.querySelectorAll('.remove');
+  for (var j = 0; j < removeBtns.length; j++) {
+    removeBtns[j].addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleIngredient(this.getAttribute('data-name'));
+    });
+  }
+}
+
+function clearSelection() {
+  state.selectedIngredients = {};
+  renderIngredients();
+  updateSelectedBar();
+}
+
+function calculateMatchScore(recipe) {
+  var matchCount = 0;
+  for (var i = 0; i < recipe.ingredients.length; i++) {
+    if (hasIngredient(recipe.ingredients[i])) matchCount++;
+  }
+  return {
+    matched: matchCount,
+    total: recipe.ingredients.length,
+    percentage: Math.round((matchCount / recipe.ingredients.length) * 100)
+  };
+}
+
+function generateMealPlan() {
+  if (countSelected() === 0) return;
+
+  var scored = [];
+  for (var i = 0; i < RECIPES.length; i++) {
+    var r = RECIPES[i];
+    scored.push({
+      name: r.name,
+      ingredients: r.ingredients,
+      spices: r.spices,
+      description: r.description,
+      servings: r.servings,
+      difficulty: r.difficulty,
+      score: calculateMatchScore(r),
+      origIndex: i
+    });
+  }
+
+  var matching = [];
+  for (var j = 0; j < scored.length; j++) {
+    if (scored[j].score.matched > 0) matching.push(scored[j]);
+  }
+
+  matching.sort(function(a, b) {
+    if (b.score.percentage !== a.score.percentage) return b.score.percentage - a.score.percentage;
+    return b.score.matched - a.score.matched;
+  });
+
+  if (matching.length === 0) {
+    renderNoResults();
+    return;
+  }
+
+  var plan = [];
+  var used = {};
+  for (var k = 0; k < matching.length && plan.length < 5; k++) {
+    plan.push(matching[k]);
+    used[matching[k].origIndex] = true;
+  }
+
+  if (plan.length < 5) {
+    var remaining = [];
+    for (var m = 0; m < scored.length; m++) {
+      if (!used[scored[m].origIndex]) remaining.push(scored[m]);
+    }
+    for (var n = remaining.length - 1; n > 0; n--) {
+      var ri = Math.floor(Math.random() * (n + 1));
+      var tmp = remaining[n];
+      remaining[n] = remaining[ri];
+      remaining[ri] = tmp;
+    }
+    for (var p = 0; p < remaining.length && plan.length < 5; p++) {
+      plan.push(remaining[p]);
+    }
+  }
+
+  state.mealPlan = plan;
+  renderMealPlan();
+}
+
+function renderMealPlan() {
+  var days = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'];
+  resultsSection.style.display = 'block';
+
+  var cardsHtml = '';
+  for (var i = 0; i < state.mealPlan.length; i++) {
+    var recipe = state.mealPlan[i];
+    var score = recipe.score;
+    var barClass = score.percentage >= 70 ? 'high' : (score.percentage >= 40 ? 'medium' : 'low');
+
+    var ingredientChips = '';
+    for (var j = 0; j < recipe.ingredients.length; j++) {
+      var ing = recipe.ingredients[j];
+      var chipClass = hasIngredient(ing) ? 'available' : 'missing';
+      ingredientChips += '<span class="ingredient-chip ' + chipClass + '">' + ing + '</span>';
+    }
+
+    var spiceChips = '';
+    for (var k = 0; k < recipe.spices.length; k++) {
+      spiceChips += '<span class="spice-chip">' + recipe.spices[k] + '</span>';
+    }
+
+    cardsHtml += '<div class="day-card">' +
+      '<div class="day-header"><span>' + days[i] + '</span><span class="difficulty">' + recipe.difficulty + '</span></div>' +
+      '<div class="day-body">' +
+        '<div class="recipe-name">' + recipe.name + '</div>' +
+        '<div class="recipe-description">' + recipe.description + '</div>' +
+        '<div class="match-score">' +
+          '<span class="match-label">' + score.percentage + '%</span>' +
+          '<div class="match-bar-bg"><div class="match-bar-fill ' + barClass + '" style="width:' + score.percentage + '%"></div></div>' +
+          '<span class="match-info">' + score.matched + '/' + score.total + ' Zutaten vorhanden</span>' +
+        '</div>' +
+        '<div class="recipe-section-label">Zutaten</div>' +
+        '<div class="ingredient-list">' + ingredientChips + '</div>' +
+        '<div class="recipe-section-label">Empfohlene Gewürze</div>' +
+        '<div class="spice-list">' + spiceChips + '</div>' +
+      '</div></div>';
+  }
+
+  var allMissing = {};
+  var allSpices = {};
+  for (var m = 0; m < state.mealPlan.length; m++) {
+    var r = state.mealPlan[m];
+    for (var n = 0; n < r.ingredients.length; n++) {
+      if (!hasIngredient(r.ingredients[n])) allMissing[r.ingredients[n]] = true;
+    }
+    for (var p = 0; p < r.spices.length; p++) {
+      allSpices[r.spices[p]] = true;
+    }
+  }
+
+  var missingList = [];
+  for (var mi in allMissing) missingList.push(mi);
+  var spiceList = [];
+  for (var si in allSpices) spiceList.push(si);
+
+  var missingHtml = '';
+  for (var q = 0; q < missingList.length; q++) {
+    missingHtml += '<li>' + missingList[q] + '</li>';
+  }
+
+  var spiceHtml = '';
+  for (var s = 0; s < spiceList.length; s++) {
+    spiceHtml += '<li>' + spiceList[s] + '</li>';
+  }
+
+  var shoppingHtml = '<div class="section shopping-section">' +
+    '<h3 class="section-title"><span class="icon">&#x1F6D2;</span> Einkaufsliste</h3>' +
+    '<div class="shopping-columns">' +
+      '<div class="shopping-column"><h4>Fehlende Zutaten (' + missingList.length + ')</h4><ul>' + missingHtml + '</ul></div>' +
+      '<div class="shopping-column"><h4>Benötigte Gewürze (' + spiceList.length + ')</h4><ul>' + spiceHtml + '</ul></div>' +
+    '</div></div>';
+
+  mealPlanEl.innerHTML = '<div class="meal-plan">' + cardsHtml + '</div>' + shoppingHtml;
+  resultsSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderNoResults() {
+  resultsSection.style.display = 'block';
+  mealPlanEl.innerHTML = '<div class="no-results"><div class="big-icon">&#x1F373;</div><p>Keine passenden Rezepte gefunden.<br>Versuche es mit anderen Lebensmitteln!</p></div>';
+  resultsSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+  </script>
 </body>
 </html>
