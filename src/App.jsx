@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Header from './components/Header'
 import CategoryBrowser from './components/CategoryBrowser'
 import PantrySection from './components/PantrySection'
@@ -32,6 +32,8 @@ export default function App() {
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('home')
   const [showApiModal, setShowApiModal] = useState(false)
+  const [retryCountdown, setRetryCountdown] = useState(null)
+  const retryFnRef = useRef(null)
 
   // Persist pantry
   useEffect(() => {
@@ -47,6 +49,19 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE.API_KEY, JSON.stringify(apiKey))
   }, [apiKey])
+
+  // Auto-retry countdown after rate limit
+  useEffect(() => {
+    if (retryCountdown === null) return
+    if (retryCountdown === 0) {
+      setRetryCountdown(null)
+      setError(null)
+      retryFnRef.current?.()
+      return
+    }
+    const t = setTimeout(() => setRetryCountdown((c) => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [retryCountdown])
 
   const togglePantry = useCallback((item) => {
     setPantry((prev) => {
@@ -131,7 +146,12 @@ Wichtige Hinweise:
         const errData = await response.json().catch(() => ({}))
         const msg = errData?.error?.message || `HTTP-Fehler ${response.status}`
         if (response.status === 400) throw new Error('Ungültiger API-Key. Bitte überprüfe deinen Gemini API-Key.')
-        if (response.status === 429) throw new Error('Zu viele Anfragen. Bitte warte kurz und versuche es erneut.')
+        if (response.status === 429) {
+          retryFnRef.current = () => generateRecipes(keyOverride)
+          setRetryCountdown(60)
+          setLoading(false)
+          return
+        }
         throw new Error(msg)
       }
 
@@ -195,11 +215,15 @@ Wichtige Hinweise:
               onGenerate={() => generateRecipes()}
               loading={loading}
             />
-            {error && (
+            {(error || retryCountdown !== null) && (
               <div className="container">
                 <div className="error-banner">
-                  <span>⚠️ {error}</span>
-                  <button onClick={() => setError(null)}>✕</button>
+                  {retryCountdown !== null ? (
+                    <span>⏳ Rate-Limit erreicht — neuer Versuch in {retryCountdown}s …</span>
+                  ) : (
+                    <span>⚠️ {error}</span>
+                  )}
+                  <button onClick={() => { setError(null); setRetryCountdown(null) }}>✕</button>
                 </div>
               </div>
             )}
