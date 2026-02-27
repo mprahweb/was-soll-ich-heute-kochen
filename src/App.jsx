@@ -127,7 +127,14 @@ difficulty: nur "Einfach", "Mittel" oder "Aufwendig". missingIngredients: keine 
         const errData = await response.json().catch(() => ({}))
         const msg = errData?.error?.message || `HTTP-Fehler ${response.status}`
         if (response.status === 400) throw new Error('Ungültiger API-Key. Bitte überprüfe deinen Gemini API-Key.')
-        if (response.status === 429) {
+        const isRateLimit =
+          response.status === 429 ||
+          response.status === 503 ||
+          msg.toLowerCase().includes('quota') ||
+          msg.toLowerCase().includes('rate') ||
+          msg.toLowerCase().includes('anfragen') ||
+          msg.toLowerCase().includes('resource_exhausted')
+        if (isRateLimit) {
           retryFnRef.current = () => generateRecipes(keyOverride)
           setRetryCountdown(60)
           setLoading(false)
