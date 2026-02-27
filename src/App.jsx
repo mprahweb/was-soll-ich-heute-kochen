@@ -115,31 +115,28 @@ Wichtige Hinweise:
 - steps: 4-6 ausführliche Zubereitungsschritte`
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': key,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 4000,
-          messages: [{ role: 'user', content: prompt }],
-        }),
-      })
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: 4000 },
+          }),
+        }
+      )
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}))
         const msg = errData?.error?.message || `HTTP-Fehler ${response.status}`
-        if (response.status === 401) throw new Error('Ungültiger API-Key. Bitte überprüfe deinen Anthropic API-Key.')
+        if (response.status === 400) throw new Error('Ungültiger API-Key. Bitte überprüfe deinen Gemini API-Key.')
         if (response.status === 429) throw new Error('Zu viele Anfragen. Bitte warte kurz und versuche es erneut.')
         throw new Error(msg)
       }
 
       const data = await response.json()
-      const text = data.content?.[0]?.text || ''
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
 
       // Extract JSON array from response
       const jsonMatch = text.match(/\[[\s\S]*\]/)
@@ -228,7 +225,7 @@ Wichtige Hinweise:
       </main>
 
       <footer className="footer">
-        Was soll ich heute kochen? &mdash; Powered by Claude AI
+        Was soll ich heute kochen? &mdash; Powered by Google Gemini
       </footer>
 
       {showApiModal && (
