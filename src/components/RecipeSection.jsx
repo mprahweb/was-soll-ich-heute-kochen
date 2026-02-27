@@ -1,5 +1,41 @@
 import { useState } from 'react'
 
+function SourceBadge({ source, translationFailed }) {
+  if (!source) return null
+  const isGemini = source === 'gemini'
+  const isMealDB = source === 'themealdb'
+  return (
+    <p style={{
+      fontSize: '0.72rem',
+      color: 'var(--text-muted)',
+      marginBottom: '8px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.3rem',
+      flexWrap: 'wrap',
+    }}>
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        background: isGemini ? 'var(--primary-faint)' : 'var(--accent-faint)',
+        color: isGemini ? 'var(--primary-dark)' : '#7c4d0a',
+        padding: '0.1rem 0.45rem',
+        borderRadius: 'var(--radius-full)',
+        fontWeight: 500,
+        fontSize: '0.68rem',
+      }}>
+        {isGemini && '✦ Google Gemini KI'}
+        {isMealDB && '🍽 TheMealDB'}
+      </span>
+      {isMealDB && translationFailed && (
+        <span style={{ fontSize: '0.68rem', fontStyle: 'italic' }}>
+          · Zubereitung auf Englisch
+        </span>
+      )}
+    </p>
+  )
+}
+
 function RecipeCard({ recipe, index, pantry, shopping, onAddMissing, onToggleShopping }) {
   const [expanded, setExpanded] = useState(false)
 
@@ -27,11 +63,7 @@ function RecipeCard({ recipe, index, pantry, shopping, onAddMissing, onToggleSho
       <div className="recipe-card-body">
         <h3 className="recipe-name">{recipe.name}</h3>
         <p className="recipe-desc">{recipe.description}</p>
-        {recipe.source === 'themealdb' && (
-          <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
-            Quelle: TheMealDB · Zubereitung auf Englisch
-          </p>
-        )}
+        <SourceBadge source={recipe.source} translationFailed={recipe.translationFailed} />
 
         {available.length > 0 && (
           <div className="ingredient-group">

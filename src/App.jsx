@@ -68,7 +68,42 @@ const DE_TO_EN = {
   'olivenöl (extra vergine)': 'olive oil',
 }
 
-async function fetchFromMealDB(pantry) {
+async function translateWithGemini(recipes, apiKey) {
+  if (!apiKey) return null
+
+  const payload = recipes.map(r => ({
+    name: r.name,
+    description: r.description,
+    availableIngredients: r.availableIngredients,
+    missingIngredients: r.missingIngredients,
+    steps: r.steps,
+  }))
+
+  const prompt = `Übersetze die folgenden Rezeptdaten vollständig ins Deutsche. Gib nur ein JSON-Array zurück, kein Text drumherum. Behalte die exakt gleiche Struktur bei:\n${JSON.stringify(payload)}\n\nDas Array muss ${recipes.length} Objekte enthalten mit den Feldern: name, description, availableIngredients (Array), missingIngredients (Array), steps (Array).`
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 3000 },
+      }),
+    }
+  )
+
+  if (!response.ok) return null
+  const data = await response.json()
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  const match = text.match(/\[[\s\S]*\]/)
+  if (!match) return null
+  const translated = JSON.parse(match[0])
+  if (!Array.isArray(translated) || translated.length !== recipes.length) return null
+  return translated
+}
+
+async function fetchFromMealDB(pantry, apiKey = '') {
   const searchTerms = [...pantry]
     .map(item => DE_TO_EN[item.toLowerCase()] || null)
     .filter(Boolean)
@@ -110,7 +145,7 @@ async function fetchFromMealDB(pantry) {
     [...pantry].map(p => (DE_TO_EN[p.toLowerCase()] || p).toLowerCase())
   )
 
-  return details
+  const englishRecipes = details
     .filter(Boolean)
     .map(meal => {
       const allIngredients = []
@@ -146,6 +181,28 @@ async function fetchFromMealDB(pantry) {
         source: 'themealdb',
       }
     })
+
+  try {
+    const translated = await translateWithGemini(englishRecipes, apiKey)
+    if (translated) {
+      return englishRecipes.map((recipe, i) => ({
+        ...recipe,
+        name: translated[i].name ?? recipe.name,
+        description: translated[i].description ?? recipe.description,
+        availableIngredients: Array.isArray(translated[i].availableIngredients)
+          ? translated[i].availableIngredients
+          : recipe.availableIngredients,
+        missingIngredients: Array.isArray(translated[i].missingIngredients)
+          ? translated[i].missingIngredients
+          : recipe.missingIngredients,
+        steps: Array.isArray(translated[i].steps)
+          ? translated[i].steps
+          : recipe.steps,
+      }))
+    }
+  } catch { /* fall through to English fallback */ }
+
+  return englishRecipes.map(r => ({ ...r, translationFailed: true }))
 }
 
 const STORAGE = {
@@ -291,7 +348,7 @@ difficulty: nur "Einfach", "Mittel" oder "Aufwendig". missingIngredients: keine 
           msg.toLowerCase().includes('anfragen') ||
           msg.toLowerCase().includes('resource_exhausted')
         if (isRateLimit) {
-          const fallback = await fetchFromMealDB(pantry)
+          const fallback = await fetchFromMealDB(pantry, key)
           if (fallback && fallback.length > 0) {
             localStorage.setItem(STORAGE.RECIPE_CACHE, JSON.stringify({ key: pantryKey(pantry), recipes: fallback }))
             setRecipes(fallback)
@@ -316,7 +373,7 @@ difficulty: nur "Einfach", "Mittel" oder "Aufwendig". missingIngredients: keine 
       const parsed = JSON.parse(jsonMatch[0])
       if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('Keine Rezepte erhalten. Bitte versuche es erneut.')
 
-      const result = parsed.slice(0, 3)
+      const result = parsed.slice(0, 3).map(r => ({ ...r, source: 'gemini' }))
       localStorage.setItem(STORAGE.RECIPE_CACHE, JSON.stringify({ key: pantryKey(pantry), recipes: result }))
       setRecipes(result)
     } catch (err) {
