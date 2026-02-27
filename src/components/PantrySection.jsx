@@ -1,4 +1,4 @@
-export default function PantrySection({ pantry, onRemove, onClear, onGenerate, loading }) {
+export default function PantrySection({ pantry, onRemove, onClear, onGenerate, onForceGenerate, loading, hasCachedRecipes }) {
   const items = [...pantry].sort()
 
   return (
@@ -50,10 +50,15 @@ export default function PantrySection({ pantry, onRemove, onClear, onGenerate, l
             </>
           ) : (
             <>
-              ✨ 5 Rezeptvorschläge generieren
+              ✨ Rezeptvorschläge generieren
             </>
           )}
         </button>
+        {hasCachedRecipes && !loading && (
+          <button className="btn-ghost-sm" onClick={onForceGenerate} style={{ marginTop: '8px', width: '100%' }}>
+            Neue Vorschläge generieren
+          </button>
+        )}
         {items.length === 0 && (
           <p className="generate-hint">
             Wähle mindestens ein Lebensmittel aus deinem Vorrat, um Rezeptvorschläge zu erhalten.

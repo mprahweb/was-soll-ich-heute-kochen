@@ -10,6 +10,11 @@ const STORAGE = {
   PANTRY: 'wsikh_pantry_v2',
   SHOPPING: 'wsikh_shopping_v2',
   API_KEY: 'wsikh_api_key',
+  RECIPE_CACHE: 'wsikh_recipe_cache',
+}
+
+function pantryKey(pantry) {
+  return [...pantry].sort().join('|')
 }
 
 function load(key, fallback) {
@@ -89,13 +94,22 @@ export default function App() {
     })
   }, [])
 
-  const generateRecipes = useCallback(async (keyOverride) => {
+  const generateRecipes = useCallback(async (keyOverride, forceRefresh = false) => {
     const key = keyOverride || apiKey
     if (!key) {
       setShowApiModal(true)
       return
     }
     if (pantry.size === 0) return
+
+    // Return cached result if pantry hasn't changed
+    if (!forceRefresh) {
+      const cached = load(STORAGE.RECIPE_CACHE, null)
+      if (cached && cached.key === pantryKey(pantry)) {
+        setRecipes(cached.recipes)
+        return
+      }
+    }
 
     setLoading(true)
     setError(null)
@@ -153,7 +167,9 @@ difficulty: nur "Einfach", "Mittel" oder "Aufwendig". missingIngredients: keine 
       const parsed = JSON.parse(jsonMatch[0])
       if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('Keine Rezepte erhalten. Bitte versuche es erneut.')
 
-      setRecipes(parsed.slice(0, 3))
+      const result = parsed.slice(0, 3)
+      localStorage.setItem(STORAGE.RECIPE_CACHE, JSON.stringify({ key: pantryKey(pantry), recipes: result }))
+      setRecipes(result)
     } catch (err) {
       if (err.name === 'TypeError' && err.message.includes('fetch')) {
         setError('Netzwerkfehler. Bitte überprüfe deine Internetverbindung.')
@@ -201,7 +217,9 @@ difficulty: nur "Einfach", "Mittel" oder "Aufwendig". missingIngredients: keine 
               onRemove={togglePantry}
               onClear={() => setPantry(new Set())}
               onGenerate={() => generateRecipes()}
+              onForceGenerate={() => generateRecipes(undefined, true)}
               loading={loading}
+              hasCachedRecipes={Boolean(recipes)}
             />
             {(error || retryCountdown !== null) && (
               <div className="container">
