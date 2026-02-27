@@ -27,6 +27,11 @@ function RecipeCard({ recipe, index, pantry, shopping, onAddMissing, onToggleSho
       <div className="recipe-card-body">
         <h3 className="recipe-name">{recipe.name}</h3>
         <p className="recipe-desc">{recipe.description}</p>
+        {recipe.source === 'themealdb' && (
+          <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
+            Quelle: TheMealDB · Zubereitung auf Englisch
+          </p>
+        )}
 
         {available.length > 0 && (
           <div className="ingredient-group">

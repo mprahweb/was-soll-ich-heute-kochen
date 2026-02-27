@@ -6,6 +6,148 @@ import RecipeSection from './components/RecipeSection'
 import ShoppingList from './components/ShoppingList'
 import ApiKeyModal from './components/ApiKeyModal'
 
+const DE_TO_EN = {
+  // Gemüse
+  'kartoffeln': 'potato', 'tomaten': 'tomato', 'zwiebeln': 'onion',
+  'knoblauch': 'garlic', 'paprika (rot)': 'red pepper', 'paprika (gelb)': 'yellow pepper',
+  'paprika (grün)': 'green pepper', 'zucchini': 'courgette', 'brokkoli': 'broccoli',
+  'karotten': 'carrot', 'spinat': 'spinach', 'champignons': 'mushroom',
+  'aubergine': 'aubergine', 'blumenkohl': 'cauliflower', 'lauch': 'leek',
+  'sellerie': 'celery', 'rote bete': 'beetroot', 'fenchel': 'fennel',
+  'rosenkohl': 'brussels sprouts', 'süßkartoffeln': 'sweet potato', 'kürbis': 'pumpkin',
+  'mais (frisch)': 'corn', 'erbsen (frisch)': 'peas', 'grüne bohnen': 'green beans',
+  'wirsing': 'savoy cabbage', 'pak choi': 'pak choi', 'gurke': 'cucumber',
+  // Obst
+  'äpfel': 'apple', 'bananen': 'banana', 'zitronen': 'lemon', 'orangen': 'orange',
+  'erdbeeren': 'strawberry', 'avocado': 'avocado', 'mango': 'mango', 'ananas': 'pineapple',
+  // Fleisch
+  'hähnchenbrust': 'chicken breast', 'hähnchenschenkel': 'chicken thigh',
+  'hähnchen (ganz)': 'whole chicken', 'putenbrust': 'turkey breast',
+  'hackfleisch (rind)': 'beef mince', 'hackfleisch (gemischt)': 'minced beef',
+  'hackfleisch (schwein)': 'pork mince', 'rindersteaks': 'beef steak',
+  'rindergulasch': 'beef', 'schweinefilet': 'pork', 'schweinekotelett': 'pork chop',
+  'schweinebauch': 'pork belly', 'speck': 'bacon', 'bratwurst': 'sausage',
+  'würstchen': 'sausage', 'lammkoteletts': 'lamb chop', 'lammhackfleisch': 'lamb mince',
+  // Fisch
+  'lachs (filet)': 'salmon', 'lachssteak': 'salmon', 'kabeljau': 'cod',
+  'thunfisch (frisch)': 'tuna', 'thunfisch (dose)': 'tuna', 'garnelen (frisch)': 'prawns',
+  'garnelen': 'prawns', 'forelle': 'trout', 'sardinen (dose)': 'sardine',
+  // Milch & Käse
+  'eier': 'eggs', 'butter': 'butter', 'milch (3,5%)': 'milk', 'milch (1,5%)': 'milk',
+  'sahne (30%+)': 'cream', 'schlagsahne': 'whipping cream', 'kochsahne (15%)': 'single cream',
+  'crème fraîche': 'creme fraiche', 'joghurt (natur)': 'yoghurt', 'joghurt (griechisch)': 'greek yoghurt',
+  'quark (mager)': 'quark', 'gouda': 'gouda', 'mozzarella (frisch)': 'mozzarella',
+  'mozzarella (gerieben)': 'mozzarella', 'parmesan': 'parmesan', 'feta': 'feta',
+  'frischkäse (natur)': 'cream cheese', 'ricotta': 'ricotta', 'mascarpone': 'mascarpone',
+  // Pasta & Getreide
+  'spaghetti': 'spaghetti', 'penne': 'penne', 'fusilli': 'pasta', 'lasagneplatten': 'lasagne',
+  'tortellini (frisch)': 'pasta', 'gnocchi (frisch)': 'gnocchi',
+  'reis (weiß, langkorn)': 'rice', 'basmati-reis': 'basmati rice',
+  'risotto-reis (arborio)': 'arborio rice', 'jasmin-reis': 'jasmine rice',
+  'couscous': 'couscous', 'bulgur': 'bulgur wheat', 'quinoa': 'quinoa',
+  'mehl (typ 405)': 'flour', 'mehl (typ 550)': 'flour', 'haferflocken (zart)': 'oats',
+  // Hülsenfrüchte
+  'rote linsen': 'red lentils', 'braune linsen': 'lentils', 'kichererbsen (dose)': 'chickpeas',
+  'kichererbsen (trocken)': 'chickpeas', 'kidneybohnen (dose)': 'kidney beans',
+  'weiße bohnen (dose)': 'cannellini beans', 'tofu (natur)': 'tofu',
+  // Konserven
+  'dosentomaten (gehackt)': 'chopped tomatoes', 'dosentomaten (ganz)': 'tomatoes',
+  'tomatenmark': 'tomato puree', 'passata (tomatenpüree)': 'passata',
+  'kokosmilch (dose)': 'coconut milk', 'mais (dose)': 'sweetcorn',
+  'erbsen (dose)': 'peas', 'oliven (glas)': 'olives',
+  // Gewürze & Saucen
+  'ingwer (frisch, wurzel)': 'ginger', 'chili (frisch, rot)': 'red chilli',
+  'kreuzkümmel (gemahlen)': 'cumin', 'koriander (gemahlen)': 'coriander',
+  'paprikapulver (süß)': 'paprika', 'curry (mild)': 'curry powder',
+  'kurkuma': 'turmeric', 'zimt (gemahlen)': 'cinnamon', 'sesam': 'sesame seeds',
+  'sojasauce (hell)': 'soy sauce', 'sojasauce (dunkel)': 'dark soy sauce',
+  'fischsauce': 'fish sauce', 'hoisin-sauce': 'hoisin sauce',
+  'tahini': 'tahini', 'hummus (fertig)': 'hummus',
+  'honig': 'honey', 'walnüsse': 'walnuts', 'mandeln (ganz)': 'almonds',
+  'cashews': 'cashew nuts', 'erdnüsse': 'peanuts',
+  'olivenöl (extra vergine)': 'olive oil',
+}
+
+async function fetchFromMealDB(pantry) {
+  const searchTerms = [...pantry]
+    .map(item => DE_TO_EN[item.toLowerCase()] || null)
+    .filter(Boolean)
+    .slice(0, 4)
+
+  if (searchTerms.length === 0) return null
+
+  const searches = await Promise.all(
+    searchTerms.map(term =>
+      fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${encodeURIComponent(term)}`)
+        .then(r => r.json())
+        .then(d => d.meals || [])
+        .catch(() => [])
+    )
+  )
+
+  const mealCount = {}
+  searches.forEach(meals => {
+    meals.forEach(m => { mealCount[m.idMeal] = (mealCount[m.idMeal] || 0) + 1 })
+  })
+
+  const topIds = Object.entries(mealCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([id]) => id)
+
+  if (topIds.length === 0) return null
+
+  const details = await Promise.all(
+    topIds.map(id =>
+      fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`)
+        .then(r => r.json())
+        .then(d => d.meals?.[0])
+        .catch(() => null)
+    )
+  )
+
+  const pantryEn = new Set(
+    [...pantry].map(p => (DE_TO_EN[p.toLowerCase()] || p).toLowerCase())
+  )
+
+  return details
+    .filter(Boolean)
+    .map(meal => {
+      const allIngredients = []
+      for (let i = 1; i <= 20; i++) {
+        const ing = meal[`strIngredient${i}`]?.trim()
+        const meas = meal[`strMeasure${i}`]?.trim()
+        if (ing) allIngredients.push(meas ? `${meas} ${ing}` : ing)
+      }
+      const BASICS = ['salt', 'water', 'oil', 'pepper', 'sugar']
+      const available = allIngredients.filter(ing =>
+        [...pantryEn].some(p => ing.toLowerCase().includes(p))
+      )
+      const missing = allIngredients.filter(ing =>
+        !available.includes(ing) &&
+        !BASICS.some(b => ing.toLowerCase().includes(b))
+      ).slice(0, 8)
+
+      const steps = (meal.strInstructions || '')
+        .split(/\r?\n+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 15)
+        .slice(0, 7)
+
+      return {
+        name: meal.strMeal,
+        description: `${meal.strCategory || 'Rezept'} · ${meal.strArea || 'International'}`,
+        difficulty: 'Mittel',
+        time: 'ca. 30 Min.',
+        servings: 4,
+        availableIngredients: available,
+        missingIngredients: missing,
+        steps: steps.length > 0 ? steps : ['Alle Zutaten vorbereiten und nach Anleitung zubereiten.'],
+        source: 'themealdb',
+      }
+    })
+}
+
 const STORAGE = {
   PANTRY: 'wsikh_pantry_v2',
   SHOPPING: 'wsikh_shopping_v2',
@@ -149,6 +291,13 @@ difficulty: nur "Einfach", "Mittel" oder "Aufwendig". missingIngredients: keine 
           msg.toLowerCase().includes('anfragen') ||
           msg.toLowerCase().includes('resource_exhausted')
         if (isRateLimit) {
+          const fallback = await fetchFromMealDB(pantry)
+          if (fallback && fallback.length > 0) {
+            localStorage.setItem(STORAGE.RECIPE_CACHE, JSON.stringify({ key: pantryKey(pantry), recipes: fallback }))
+            setRecipes(fallback)
+            setLoading(false)
+            return
+          }
           retryFnRef.current = () => generateRecipes(keyOverride)
           setRetryCountdown(60)
           setLoading(false)
