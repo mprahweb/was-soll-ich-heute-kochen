@@ -103,31 +103,12 @@ export default function App() {
 
     const pantryList = [...pantry].join(', ')
 
-    const prompt = `Du bist ein professioneller Kochassistent.
+    const prompt = `Vorrat: ${pantryList}
 
-Der Benutzer hat folgende Lebensmittel im Vorrat: ${pantryList}
+Erstelle 3 Rezepte auf Deutsch als JSON-Array. Nur JSON, kein Text drumherum:
+[{"name":"...","description":"1 Satz","difficulty":"Einfach","time":"30 Min.","servings":4,"availableIngredients":["..."],"missingIngredients":["..."],"steps":["Schritt 1","Schritt 2","Schritt 3","Schritt 4"]}]
 
-Erstelle genau 5 kreative und leckere Rezeptvorschläge auf Deutsch, die möglichst viele dieser vorhandenen Zutaten nutzen. Beziehe auch typische Standardzutaten mit ein (Salz, Pfeffer, Wasser, etc.).
-
-Antworte AUSSCHLIESSLICH mit einem JSON-Array (kein weiterer Text, kein Markdown, keine Erklärungen):
-[
-  {
-    "name": "Rezeptname",
-    "description": "Appetitliche Kurzbeschreibung in 1-2 Sätzen",
-    "difficulty": "Einfach",
-    "time": "30 Min.",
-    "servings": 4,
-    "availableIngredients": ["Zutat aus dem Vorrat 1", "Zutat aus dem Vorrat 2"],
-    "missingIngredients": ["Fehlende Zutat 1", "Fehlende Zutat 2"],
-    "steps": ["Schritt 1 ausführliche Beschreibung", "Schritt 2 ausführliche Beschreibung", "Schritt 3", "Schritt 4", "Schritt 5"]
-  }
-]
-
-Wichtige Hinweise:
-- Verwende nur "Einfach", "Mittel" oder "Aufwendig" für difficulty
-- availableIngredients: NUR Zutaten die im Vorrat sind
-- missingIngredients: Zutaten die für das Rezept fehlen (keine Grundzutaten wie Salz/Pfeffer)
-- steps: 4-6 ausführliche Zubereitungsschritte`
+difficulty: nur "Einfach", "Mittel" oder "Aufwendig". missingIngredients: keine Grundzutaten (Salz, Pfeffer, Öl, Wasser).`
 
     try {
       const response = await fetch(
@@ -137,7 +118,7 @@ Wichtige Hinweise:
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 4000 },
+            generationConfig: { maxOutputTokens: 2000 },
           }),
         }
       )
@@ -165,7 +146,7 @@ Wichtige Hinweise:
       const parsed = JSON.parse(jsonMatch[0])
       if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('Keine Rezepte erhalten. Bitte versuche es erneut.')
 
-      setRecipes(parsed.slice(0, 5))
+      setRecipes(parsed.slice(0, 3))
     } catch (err) {
       if (err.name === 'TypeError' && err.message.includes('fetch')) {
         setError('Netzwerkfehler. Bitte überprüfe deine Internetverbindung.')
