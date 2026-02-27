@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, claude/grocery-recipe-app-RBQPp]
   workflow_dispatch:
 
 permissions:
