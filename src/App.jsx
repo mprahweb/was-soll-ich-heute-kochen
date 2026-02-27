@@ -446,7 +446,7 @@ difficulty: nur "Einfach", "Mittel" oder "Aufwendig". missingIngredients: keine 
                 shopping={shopping}
                 onAddMissing={addMissingToShopping}
                 onToggleShopping={toggleShopping}
-                onRegenerate={() => generateRecipes()}
+                onRegenerate={() => generateRecipes(undefined, true)}
                 loading={loading}
               />
             )}
