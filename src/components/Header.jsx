@@ -1,4 +1,4 @@
-export default function Header({ activeTab, onTabChange, shoppingCount, pantryCount, onApiKeyClick, hasApiKey }) {
+export default function Header({ activeTab, onTabChange, shoppingCount, pantryCount }) {
   return (
     <header className="header">
       <div className="header-top">
@@ -9,14 +9,6 @@ export default function Header({ activeTab, onTabChange, shoppingCount, pantryCo
             <p>Vorrat verwalten &amp; Rezepte entdecken</p>
           </div>
         </div>
-        <button
-          className={`api-key-btn ${hasApiKey ? 'has-key' : ''}`}
-          onClick={onApiKeyClick}
-          title={hasApiKey ? 'API-Key ändern' : 'Claude API-Key eingeben'}
-        >
-          {hasApiKey ? '🔑' : '🔓'}
-          <span>{hasApiKey ? 'API-Key' : 'Key setzen'}</span>
-        </button>
       </div>
 
       <nav className="header-nav">

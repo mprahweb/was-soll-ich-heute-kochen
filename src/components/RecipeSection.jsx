@@ -1,37 +1,25 @@
 import { useState } from 'react'
 
-function SourceBadge({ source, translationFailed }) {
-  if (!source) return null
-  const isGemini = source === 'gemini'
-  const isMealDB = source === 'themealdb'
+function SourceBadge({ source }) {
+  if (source !== 'csv') return null
   return (
     <p style={{
       fontSize: '0.72rem',
       color: 'var(--text-muted)',
       marginBottom: '8px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.3rem',
-      flexWrap: 'wrap',
     }}>
       <span style={{
         display: 'inline-flex',
         alignItems: 'center',
-        background: isGemini ? 'var(--primary-faint)' : 'var(--accent-faint)',
-        color: isGemini ? 'var(--primary-dark)' : '#7c4d0a',
+        background: 'var(--primary-faint)',
+        color: 'var(--primary-dark)',
         padding: '0.1rem 0.45rem',
         borderRadius: 'var(--radius-full)',
         fontWeight: 500,
         fontSize: '0.68rem',
       }}>
-        {isGemini && '✦ Google Gemini KI'}
-        {isMealDB && '🍽 TheMealDB'}
+        📖 Mein Kochbuch
       </span>
-      {isMealDB && translationFailed && (
-        <span style={{ fontSize: '0.68rem', fontStyle: 'italic' }}>
-          · Zubereitung auf Englisch
-        </span>
-      )}
     </p>
   )
 }
@@ -54,7 +42,7 @@ function RecipeCard({ recipe, index, pantry, shopping, onAddMissing, onToggleSho
       <div className="recipe-card-header">
         <div className="recipe-number">{index + 1}</div>
         <div className="recipe-meta">
-          <span className={`difficulty-badge ${difficultyColor}`}>{recipe.difficulty}</span>
+          {recipe.difficulty && <span className={`difficulty-badge ${difficultyColor}`}>{recipe.difficulty}</span>}
           {recipe.time && <span className="time-badge">⏱ {recipe.time}</span>}
           {recipe.servings && <span className="servings-badge">👥 {recipe.servings} Pers.</span>}
         </div>
@@ -63,7 +51,7 @@ function RecipeCard({ recipe, index, pantry, shopping, onAddMissing, onToggleSho
       <div className="recipe-card-body">
         <h3 className="recipe-name">{recipe.name}</h3>
         <p className="recipe-desc">{recipe.description}</p>
-        <SourceBadge source={recipe.source} translationFailed={recipe.translationFailed} />
+        <SourceBadge source={recipe.source} />
 
         {available.length > 0 && (
           <div className="ingredient-group">
