@@ -1,5 +1,16 @@
+import { useState } from 'react'
+
 export default function PantrySection({ pantry, onRemove, onClear, onGenerate, onForceGenerate, loading, hasCachedRecipes }) {
   const items = [...pantry].sort()
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = () => {
+    const text = `Mein aktueller Vorrat:\n${items.join(', ')}`
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
 
   return (
     <div className="container">
@@ -10,11 +21,18 @@ export default function PantrySection({ pantry, onRemove, onClear, onGenerate, o
             Mein Vorrat
             {items.length > 0 && <span className="badge">{items.length}</span>}
           </h2>
-          {items.length > 0 && (
-            <button className="btn-ghost-sm danger" onClick={onClear}>
-              Alle entfernen
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {items.length > 0 && (
+              <button className="btn-ghost-sm" onClick={handleCopy} title="Vorratsliste in die Zwischenablage kopieren">
+                {copied ? '✓ Kopiert' : '📋 Kopieren'}
+              </button>
+            )}
+            {items.length > 0 && (
+              <button className="btn-ghost-sm danger" onClick={onClear}>
+                Alle entfernen
+              </button>
+            )}
+          </div>
         </div>
 
         {items.length === 0 ? (
