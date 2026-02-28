@@ -1,0 +1,88 @@
+import { useState } from 'react'
+
+export default function PantrySection({ pantry, onRemove, onClear, onGenerate, onForceGenerate, loading, hasCachedRecipes }) {
+  const items = [...pantry].sort()
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = () => {
+    const text = `Mein aktueller Vorrat:\n${items.join(', ')}`
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <div className="container">
+      <div className="section pantry-section">
+        <div className="section-header">
+          <h2 className="section-title">
+            <span>✅</span>
+            Mein Vorrat
+            {items.length > 0 && <span className="badge">{items.length}</span>}
+          </h2>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {items.length > 0 && (
+              <button className="btn-ghost-sm" onClick={handleCopy} title="Vorratsliste in die Zwischenablage kopieren">
+                {copied ? '✓ Kopiert' : '📋 Kopieren'}
+              </button>
+            )}
+            {items.length > 0 && (
+              <button className="btn-ghost-sm danger" onClick={onClear}>
+                Alle entfernen
+              </button>
+            )}
+          </div>
+        </div>
+
+        {items.length === 0 ? (
+          <p className="pantry-empty">
+            Noch nichts im Vorrat. Tippe auf Lebensmittel oben, um sie hinzuzufügen.
+          </p>
+        ) : (
+          <div className="pantry-tags">
+            {items.map((item) => (
+              <span key={item} className="pantry-tag">
+                {item}
+                <button
+                  className="tag-remove"
+                  onClick={() => onRemove(item)}
+                  title="Entfernen"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        <button
+          className="generate-btn"
+          onClick={onGenerate}
+          disabled={items.length === 0 || loading}
+        >
+          {loading ? (
+            <>
+              <span className="spinner">⏳</span>
+              Rezepte werden generiert...
+            </>
+          ) : (
+            <>
+              ✨ Rezeptvorschläge generieren
+            </>
+          )}
+        </button>
+        {hasCachedRecipes && !loading && (
+          <button className="btn-ghost-sm" onClick={onForceGenerate} style={{ marginTop: '8px', width: '100%' }}>
+            Neue Vorschläge generieren
+          </button>
+        )}
+        {items.length === 0 && (
+          <p className="generate-hint">
+            Wähle mindestens ein Lebensmittel aus deinem Vorrat, um Rezeptvorschläge zu erhalten.
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
