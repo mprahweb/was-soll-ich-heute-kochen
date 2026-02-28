@@ -98,6 +98,7 @@ const STORAGE = {
   PANTRY: 'wsikh_pantry_v2',
   SHOPPING: 'wsikh_shopping_v2',
   RECIPE_CACHE: 'wsikh_recipe_cache',
+  CSV_DATA: 'wsikh_csv_data',
 }
 
 function pantryKey(pantry) {
@@ -122,7 +123,17 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('home')
+  const [localCsvLoaded, setLocalCsvLoaded] = useState(
+    () => Boolean(localStorage.getItem(STORAGE.CSV_DATA))
+  )
   const offsetRef = useRef(0)
+
+  const handleCsvUpload = useCallback((text) => {
+    localStorage.setItem(STORAGE.CSV_DATA, text)
+    localStorage.removeItem(STORAGE.RECIPE_CACHE)
+    setLocalCsvLoaded(true)
+    setRecipes(null)
+  }, [])
 
   useEffect(() => {
     localStorage.setItem(STORAGE.PANTRY, JSON.stringify([...pantry]))
@@ -174,10 +185,14 @@ export default function App() {
     setError(null)
 
     try {
-      const directUrl = getOneDriveDirectUrl(COOKBOOK_URL)
-      const res = await fetch(directUrl)
-      if (!res.ok) throw new Error(`Kochbuch konnte nicht geladen werden (HTTP ${res.status})`)
-      const text = await res.text()
+      // Local upload takes priority over OneDrive
+      let text = localStorage.getItem(STORAGE.CSV_DATA)
+      if (!text) {
+        const directUrl = getOneDriveDirectUrl(COOKBOOK_URL)
+        const res = await fetch(directUrl)
+        if (!res.ok) throw new Error(`Kochbuch konnte nicht geladen werden (HTTP ${res.status}). Lade die CSV-Datei alternativ direkt hoch.`)
+        text = await res.text()
+      }
 
       const csvRecipes = parseCsv(text)
       if (csvRecipes.length === 0) throw new Error('Das Kochbuch scheint leer oder unlesbar zu sein.')
@@ -217,6 +232,8 @@ export default function App() {
         onTabChange={setActiveTab}
         shoppingCount={shopping.size}
         pantryCount={pantry.size}
+        onCsvUpload={handleCsvUpload}
+        localCsvLoaded={localCsvLoaded}
       />
 
       <main className="main-content">

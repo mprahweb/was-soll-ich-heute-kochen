@@ -1,4 +1,17 @@
-export default function Header({ activeTab, onTabChange, shoppingCount, pantryCount }) {
+import { useRef } from 'react'
+
+export default function Header({ activeTab, onTabChange, shoppingCount, pantryCount, onCsvUpload, localCsvLoaded }) {
+  const fileInputRef = useRef(null)
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (evt) => onCsvUpload(evt.target.result)
+    reader.readAsText(file, 'UTF-8')
+    e.target.value = ''
+  }
+
   return (
     <header className="header">
       <div className="header-top">
@@ -9,6 +22,21 @@ export default function Header({ activeTab, onTabChange, shoppingCount, pantryCo
             <p>Vorrat verwalten &amp; Rezepte entdecken</p>
           </div>
         </div>
+        <button
+          className={`api-key-btn ${localCsvLoaded ? 'has-key' : ''}`}
+          onClick={() => fileInputRef.current?.click()}
+          title={localCsvLoaded ? 'Kochbuch ersetzen (CSV hochladen)' : 'Kochbuch als CSV hochladen'}
+        >
+          📂
+          <span>{localCsvLoaded ? 'Kochbuch' : 'CSV laden'}</span>
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv,.txt"
+          onChange={handleFileChange}
+          style={{ display: 'none' }}
+        />
       </div>
 
       <nav className="header-nav">
